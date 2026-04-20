@@ -11,7 +11,7 @@
 <body>
   <div class="container">
     <div class="brand">BREWS.CO</div>
-    <h2>Inventory System</h2>
+    <div class="brand-sub">Inventory System</div>
 
     <div class="section">
       <h3>Input Cups</h3>
@@ -42,8 +42,6 @@
     <div class="button-group">
       <button onclick="calculate()">Compute</button>
       <button onclick="clearAll()" class="secondary">Clear All</button>
-      <button onclick="window.location.href='calendar.html'" class="secondary">History</button>
-      <button onclick="clearHistoryUI()" class="secondary">Delete History</button>
     </div>
 
     <div class="section">
@@ -51,7 +49,6 @@
     </div>
   </div>
 
-  <!-- Scripts loaded in dependency order: classes → storage → history → ui → main -->
   <script src="js/InventorySystem.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/history.js"></script>
