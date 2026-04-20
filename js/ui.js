@@ -1,33 +1,15 @@
 /**
  * ui.js
- * Handles all DOM rendering: calculating results, building the expense list,
- * displaying history, and wiring up user interactions.
- *
- * Import and call initUI() from main.js to bootstrap everything.
+ * All DOM rendering: calculate results, expense rows, history display, clear.
+ * Depends on: InventorySystem.js, storage.js, history.js (loaded before this).
  */
 
-import { InventorySystem } from "./InventorySystem.js";
-import { saveInputs, clearInputStorage } from "./storage.js";
-import {
-  getAllHistory,
-  saveHistory,
-  getHistoryByDate,
-  deleteHistoryByDate,
-  clearAllHistory
-} from "./history.js";
-
-// ── Module-level state ────────────────────────────────────────────────────────
 let lastRenderContent = "";
 let lastRenderDate    = "";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Formats a number as Philippine Peso currency.
- * @param {number|string} value
- * @returns {string}  e.g. "₱1,234.50"
- */
-export function formatMoney(value) {
+function formatMoney(value) {
   const num = Number(value) || 0;
   return "₱" + num.toLocaleString("en-PH", {
     minimumFractionDigits: 2,
@@ -35,10 +17,6 @@ export function formatMoney(value) {
   });
 }
 
-/**
- * Reads all expense rows from the DOM and returns a clean array.
- * @returns {Array<{name: string, price: number}>}
- */
 function getExpensesFromUI() {
   const rows = document.querySelectorAll("#expensesContainer .expense-row");
   const list = [];
@@ -52,49 +30,31 @@ function getExpensesFromUI() {
 
 // ── Expense rows ──────────────────────────────────────────────────────────────
 
-/**
- * Appends a new expense input row to #expensesContainer.
- * @param {string} name  - Pre-fill the name field (optional)
- * @param {string} price - Pre-fill the price field (optional)
- */
-export function addExpenseRow(name = "", price = "") {
+function addExpenseRow(name = "", price = "") {
   const container = document.getElementById("expensesContainer");
-  const row = document.createElement("div");
-  row.className = "expense-row";
-  row.innerHTML = `
+  const row       = document.createElement("div");
+  row.className   = "expense-row";
+  row.innerHTML   = `
     <input type="text"   class="exp-name"  placeholder="Item name" value="${name}">
     <input type="number" class="exp-price" placeholder="₱0"        value="${price}">
-    <button type="button" class="remove-expense-btn">x</button>
+    <button type="button" onclick="this.parentElement.remove(); saveInputs();">x</button>
   `;
-  row.querySelector(".remove-expense-btn").addEventListener("click", () => {
-    row.remove();
-    saveInputs();
-  });
   row.addEventListener("input", saveInputs);
   container.appendChild(row);
 }
 
 // ── Calculate ─────────────────────────────────────────────────────────────────
 
-/**
- * Reads all form inputs, runs the InventorySystem calculations,
- * and renders the results panel.
- */
-export function calculate() {
+function calculate() {
   const v = id => +document.getElementById(id).value || 0;
 
-  const beginM  = v("beginM"),  endM    = v("endM"),  tallyMC = v("tallyMC");
-  const beginL  = v("beginL"),  endL    = v("endL"),  tallyLC = v("tallyLC");
-  const beginS  = v("beginS"),  endS    = v("endS");
-  const beginHC = v("beginHC"), endHC   = v("endHC");
-
   const system = new InventorySystem();
-  system.setCupsM(beginM, endM, tallyMC);
-  system.setCupsL(beginL, endL, tallyLC);
-  system.setCupsS(beginS, endS);
-  system.setCupsHC(beginHC, endHC);
-  system.setMC(tallyMC);
-  system.setLC(tallyLC);
+  system.setCupsM( v("beginM"),  v("endM"),  v("tallyMC"));
+  system.setCupsL( v("beginL"),  v("endL"),  v("tallyLC"));
+  system.setCupsS( v("beginS"),  v("endS"));
+  system.setCupsHC(v("beginHC"), v("endHC"));
+  system.setMC(v("tallyMC"));
+  system.setLC(v("tallyLC"));
   system.setExpenses(getExpensesFromUI());
   system.setAddons(v("addons"));
 
@@ -103,31 +63,28 @@ export function calculate() {
   const grossIncome = system.computeGrossIncome(salary);
   const finalTotal  = system.computeFinalTotal(salary);
 
-  // Display order for the cup table
   const orderedRows = [
-    { item: system.M,  beg: beginM,  end: endM  },
-    { item: system.L,  beg: beginL,  end: endL  },
-    { item: system.LC, beg: null,    end: null  },
-    { item: system.MC, beg: null,    end: null  },
-    { item: system.HC, beg: beginHC, end: endHC },
-    { item: system.S,  beg: beginS,  end: endS  },
+    { item: system.M,  beg: v("beginM"),  end: v("endM")  },
+    { item: system.L,  beg: v("beginL"),  end: v("endL")  },
+    { item: system.LC, beg: null,         end: null        },
+    { item: system.MC, beg: null,         end: null        },
+    { item: system.HC, beg: v("beginHC"), end: v("endHC") },
+    { item: system.S,  beg: v("beginS"),  end: v("endS")  },
   ];
 
-  const dash  = v => (v === null ? "—" : v);
+  const dash  = val => (val === null ? "—" : val);
   const today = new Date().toISOString().split("T")[0];
   const existingDate = document.getElementById("resultDate")?.value || today;
   lastRenderDate = existingDate;
 
-  // ── Build HTML ──────────────────────────────────────────────────────────
   let html = `
     <div style="display:flex; justify-content:space-between; align-items:center;
                 border-bottom:2px solid #d4b89e; padding-bottom:4px; margin-bottom:10px;">
       <h3 style="margin:0; font-weight:600; border:none;">Results</h3>
       <input type="date" id="resultDate" value="${existingDate}"
-        style="border:none; background:transparent; font-size:0.9rem; color:#5a4632;
-               cursor:pointer; text-align:right;">
+        style="border:none; background:transparent; font-size:0.9rem;
+               color:#5a4632; cursor:pointer; text-align:right;">
     </div>
-
     <table>
       <tr><th>Item</th><th>Beg</th><th>Cups</th><th>Price</th><th>End</th><th>Amount</th></tr>
   `;
@@ -147,9 +104,7 @@ export function calculate() {
 
   html += `<tr class="totals"><td colspan="5">Total Cup Sales</td><td>${formatMoney(totalSales)}</td></tr></table>`;
 
-  // ── Summary ─────────────────────────────────────────────────────────────
   const totalExpenses = system.expenses + salary;
-
   html += `<table class="summary">
     <tr class="expense-header">
       <td>Total Expenses:</td>
@@ -184,31 +139,23 @@ export function calculate() {
   </table>`;
 
   lastRenderContent = html;
-  renderResults(html, false);
+  renderResults(html);
   saveInputs();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ── Save current result ───────────────────────────────────────────────────────
 
-/**
- * Saves the most recently computed result to history.
- * Called by the "Save to History" button inside the results panel.
- */
-export function saveCurrentResults() {
-  if (!lastRenderContent) {
-    alert("Please compute or load history first.");
-    return;
-  }
+function saveCurrentResults() {
+  if (!lastRenderContent) { alert("Please compute first."); return; }
   const dateInput  = document.getElementById("resultDate");
   const editedDate = dateInput?.value || lastRenderDate || new Date().toISOString().split("T")[0];
   saveHistory(editedDate, lastRenderContent);
 
-  // Visual feedback — disable the Save button
   const btn = document.querySelector(".output-actions .primary");
   if (btn) {
-    btn.disabled     = true;
-    btn.textContent  = "Saved";
+    btn.disabled      = true;
+    btn.textContent   = "Saved";
     btn.style.opacity = "0.8";
     btn.style.cursor  = "default";
   }
@@ -216,12 +163,9 @@ export function saveCurrentResults() {
 
 // ── History UI ────────────────────────────────────────────────────────────────
 
-/**
- * Renders the full history list into #results.
- */
-export function showHistory() {
+function showHistory() {
   const history = getAllHistory();
-  const res = document.getElementById("results");
+  const res     = document.getElementById("results");
   res.dataset.view = "history";
 
   if (!history.length) {
@@ -229,7 +173,7 @@ export function showHistory() {
     return;
   }
 
-  const listHTML = `
+  res.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;
                 border-bottom:2px solid #d4b89e; padding-bottom:4px; margin-bottom:10px;">
       <h3 style="margin:0; font-weight:600; border:none;">History</h3>
@@ -239,64 +183,46 @@ export function showHistory() {
         <div class="history-item">
           <div class="date">${h.date}</div>
           <div class="actions">
-            <button class="btn-restore" data-date="${h.date}">Restore</button>
-            <button class="btn-delete"  data-date="${h.date}">Delete</button>
+            <button class="btn-restore" onclick="restoreHistoryEntryByDate('${h.date}')">Restore</button>
+            <button class="btn-delete"  onclick="deleteHistoryEntryByDate('${h.date}')">Delete</button>
           </div>
         </div>
       `).join("")}
     </div>
   `;
 
-  res.innerHTML = listHTML;
-
-  // Attach events via delegation so we don't use inline handlers
-  res.querySelectorAll(".btn-restore").forEach(btn => {
-    btn.addEventListener("click", () => restoreHistoryEntry(btn.dataset.date));
-  });
-  res.querySelectorAll(".btn-delete").forEach(btn => {
-    btn.addEventListener("click", () => {
-      deleteHistoryByDate(btn.dataset.date);
-      showHistory();
-    });
-  });
-
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/**
- * Restores a history entry into the results panel.
- * @param {string} date
- */
-function restoreHistoryEntry(date) {
+function restoreHistoryEntryByDate(date) {
   const entry = getHistoryByDate(date);
   if (!entry) return;
   lastRenderContent = entry.results;
   lastRenderDate    = entry.date;
-  renderResults(entry.results, false);
+  renderResults(entry.results);
   delete document.getElementById("results").dataset.view;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/**
- * Prompts the user and wipes all history if confirmed.
- */
-export function clearHistoryUI() {
+function deleteHistoryEntryByDate(date) {
+  deleteHistoryByDate(date);
+  showHistory();
+}
+
+function clearHistoryUI() {
   if (confirm("Are you sure you want to delete all history?")) {
     clearAllHistory();
     const res = document.getElementById("results");
-    res.innerHTML = "<p>History cleared.</p>";
+    res.innerHTML    = "<p>History cleared.</p>";
     res.dataset.view = "history";
   }
 }
 
 // ── Clear all ─────────────────────────────────────────────────────────────────
 
-/**
- * Resets every input field and clears the results panel and saved state.
- */
-export function clearAll() {
+function clearAll() {
   document.querySelectorAll("input").forEach(i => { if (!i.disabled) i.value = ""; });
-  document.getElementById("results").innerHTML = "";
+  document.getElementById("results").innerHTML        = "";
   document.getElementById("expensesContainer").innerHTML = "";
   addExpenseRow();
   lastRenderContent = "";
@@ -307,24 +233,12 @@ export function clearAll() {
 
 // ── Internal render helper ────────────────────────────────────────────────────
 
-/**
- * Injects content HTML into #results along with the action buttons.
- * @param {string}  contentHTML
- * @param {boolean} alreadySaved - If true, the Save button starts disabled
- */
-function renderResults(contentHTML, alreadySaved = false) {
-  const actionsHTML = `
+function renderResults(contentHTML) {
+  const res = document.getElementById("results");
+  res.innerHTML = contentHTML + `
     <div class="output-actions">
-      <button class="primary" id="saveResultBtn"
-        ${alreadySaved ? 'disabled style="opacity:0.8; cursor:default;"' : ""}>
-        ${alreadySaved ? "Saved" : "Save to History"}
-      </button>
+      <button class="primary" onclick="saveCurrentResults()">Save to History</button>
     </div>
   `;
-
-  const res = document.getElementById("results");
-  res.innerHTML = contentHTML + actionsHTML;
   delete res.dataset.view;
-
-  res.querySelector("#saveResultBtn")?.addEventListener("click", saveCurrentResults);
 }

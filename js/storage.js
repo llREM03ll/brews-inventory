@@ -1,12 +1,12 @@
 /**
  * storage.js
- * Handles saving and restoring the form's input state to/from localStorage.
- * Extend FIELD_IDS if you add new input fields to index.html.
+ * Persists and restores form input state via localStorage.
+ * Add any new input field IDs to FIELD_IDS to include them in auto-save.
  */
 
 const INPUT_STORAGE_KEY = "brewsInputState";
 
-export const FIELD_IDS = [
+const FIELD_IDS = [
   "beginM", "endM", "tallyMC",
   "beginL", "endL", "tallyLC",
   "beginS", "endS",
@@ -14,10 +14,7 @@ export const FIELD_IDS = [
   "addons"
 ];
 
-/**
- * Reads all form fields and expense rows, then persists them to localStorage.
- */
-export function saveInputs() {
+function saveInputs() {
   const state = {};
 
   FIELD_IDS.forEach(id => {
@@ -37,13 +34,7 @@ export function saveInputs() {
   localStorage.setItem(INPUT_STORAGE_KEY, JSON.stringify(state));
 }
 
-/**
- * Reads localStorage and repopulates all form fields and expense rows.
- * Returns the saved expense rows so ui.js can rebuild them via addExpenseRow().
- *
- * @returns {{ expenses: Array<{name: string, price: string}> } | null}
- */
-export function restoreInputs() {
+function restoreInputs() {
   const raw = localStorage.getItem(INPUT_STORAGE_KEY);
   if (!raw) return null;
 
@@ -56,14 +47,19 @@ export function restoreInputs() {
     });
 
     return { expenses: state._expenses || [] };
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
-/**
- * Removes the saved input state from localStorage.
- */
-export function clearInputStorage() {
+function clearInputStorage() {
   localStorage.removeItem(INPUT_STORAGE_KEY);
+}
+
+function attachInputListeners() {
+  FIELD_IDS.forEach(id => {
+    document.getElementById(id)?.addEventListener("input", saveInputs);
+  });
+  document.getElementById("expensesContainer")
+    .addEventListener("input", saveInputs);
 }

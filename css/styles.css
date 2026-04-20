@@ -12,7 +12,6 @@ body {
   min-height: 100vh;
   color: #333;
 }
-
 body::before {
   content: "";
   position: fixed;
@@ -20,7 +19,6 @@ body::before {
   background: rgba(245, 238, 230, 0.7);
   z-index: -1;
 }
-
 .container {
   background: #fffaf5;
   padding: 20px;
@@ -33,66 +31,45 @@ body::before {
   border: 1px solid #e8d5c4;
 }
 .container:hover { transform: translateY(-2px); }
-
 .brand { text-align: center; font-size: 2.0rem; font-weight: 700; color: #7a5c3e; margin-bottom: 10px; }
 h2 { text-align: center; margin: 0 0 25px; font-size: 1.8rem; font-weight: 600; color: #7a5c3e; }
-
 .section { margin-bottom: 25px; }
 h3 { margin: 0 0 14px; font-size: 1.2rem; font-weight: 600; color: #5c4631; border-bottom: 2px solid #e8d5c4; padding-bottom: 6px; }
-
 .row { display: grid; grid-template-columns: 100px repeat(3, 1fr); gap: 10px; align-items: center; margin-bottom: 12px; }
 .row label { font-size: 0.95rem; color: #5c4631; font-weight: 500; }
-
 input { padding: 8px 10px; border: 1px solid #d4b89e; border-radius: 8px; font-size: 0.95rem; width: 100%; background: #f5eee6; box-sizing: border-box; }
 input:focus { outline: none; border-color: #c7a27c; box-shadow: 0 0 0 3px rgba(199, 162, 124, 0.3); }
 .placeholder { background: #f9f5f0; border: none; color: #9ca3af; }
-
 .button-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px 0; }
 .button-group button { flex: 1; min-width: 120px; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.25s ease-in-out; }
 .button-group button:not(.secondary) { background: linear-gradient(135deg, #c7a27c, #7a5c3e); color: white; box-shadow: 0 4px 12px rgba(122, 92, 62, 0.25); }
 .button-group button:not(.secondary):hover { background: linear-gradient(135deg, #7a5c3e, #5c4631); transform: translateY(-1px); }
 .button-group button.secondary { background: #e8d5c4; color: #5c4631; }
 .button-group button.secondary:hover { background: #d4b89e; transform: translateY(-1px); }
-
 .expense-row { display: flex; gap: 8px; margin: 6px 0; }
 .expense-row input { flex: 1; }
 .expense-row button {
   background: linear-gradient(135deg, #c7a27c, #7a5c3e);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  padding: 4px 10px;
-  font-weight: bold;
+  color: white; border: none; border-radius: 8px;
+  cursor: pointer; padding: 4px 10px; font-weight: bold;
   box-shadow: 0 2px 6px rgba(122, 92, 62, 0.2);
   transition: all 0.25s ease-in-out;
 }
 .expense-row button:hover { background: linear-gradient(135deg, #7a5c3e, #5c4631); transform: translateY(-1px); }
-
 .add-expense-btn {
-  display: block;
-  width: 100%;
-  margin: 12px 0;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  background: linear-gradient(135deg, #c7a27c, #7a5c3e);
-  color: white;
-  box-shadow: 0 4px 12px rgba(122, 92, 62, 0.25);
+  display: block; width: 100%; margin: 12px 0; padding: 12px 20px;
+  border: none; border-radius: 10px; font-weight: 600; font-size: 1rem;
+  cursor: pointer; background: linear-gradient(135deg, #c7a27c, #7a5c3e);
+  color: white; box-shadow: 0 4px 12px rgba(122, 92, 62, 0.25);
   transition: all 0.25s ease-in-out;
 }
 .add-expense-btn:hover { background: linear-gradient(135deg, #7a5c3e, #5c4631); transform: translateY(-1px); }
-
 table { width: 100%; border-collapse: collapse; margin-top: 12px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 0.9rem; }
 th, td { padding: 10px; text-align: right; border-bottom: 1px solid #e8d5c4; }
 th:first-child, td:first-child { text-align: left; }
 th { background: #f5eee6; font-weight: 600; color: #5c4631; }
 tr:hover td { background: #f9f5f0; }
 .totals td { font-weight: 700; border-top: 2px solid #7a5c3e; color: #7a5c3e; }
-
 .summary { margin-top: 18px; }
 .summary td { border: none; padding: 6px 12px; }
 .summary td:first-child { text-align: left; color: #5c4631; }
@@ -100,41 +77,23 @@ tr:hover td { background: #f9f5f0; }
 .summary .expense-header td { font-weight: 700; color: #5c4631; border-top: 1px solid #e8d5c4; padding-top: 10px; }
 .summary .expense-sub td { color: #7a7a7a; font-size: 0.88rem; }
 .summary .expense-sub td:first-child { padding-left: 28px; }
-
-#resultDate {
-  border: none;
-  background: transparent;
-  font-size: 0.9rem;
-  color: #5a4632;
-  cursor: pointer;
-  text-align: right;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
-}
-#resultDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-
 .output-actions { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
 .output-actions button { padding: 10px 16px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .2s ease; }
 .output-actions .primary { background: linear-gradient(135deg, #c7a27c, #7a5c3e); color: #fff; box-shadow: 0 4px 12px rgba(122, 92, 62, 0.25); }
 .output-actions .primary:hover { transform: translateY(-1px); }
 .output-actions .secondary { background: #e8d5c4; color: #5c4631; }
 .output-actions .secondary:hover { background: #d4b89e; transform: translateY(-1px); }
-
 .history-list { margin-top: 8px; }
 .history-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; border: 1px solid #e8d5c4; border-radius: 12px; background: #fff;
-  margin: 8px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  padding: 10px 12px; border: 1px solid #e8d5c4; border-radius: 12px;
+  background: #fff; margin: 8px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 .history-item .date { font-weight: 600; color: #5c4631; }
 .history-item .actions { display: flex; gap: 8px; }
 .history-item .actions button { padding: 8px 12px; border-radius: 10px; border: none; cursor: pointer; }
 .btn-restore { background: #c7a27c; color: white; }
-.btn-delete { background: #e8d5c4; color: #5c4631; }
-
+.btn-delete  { background: #e8d5c4; color: #5c4631; }
 @media (max-width: 600px) {
   .row { grid-template-columns: 1fr; }
   .row label { margin-bottom: 4px; }
