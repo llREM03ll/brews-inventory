@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7a5c3e" />
+  <title>Inventory System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="brand">BREWS.CO</div>
+    <h2>Inventory System</h2>
+
+    <div class="section">
+      <h3>Input Cups</h3>
+      <div class="row"><label>Medium</label><input type="number" id="beginM" placeholder="Begin"><input type="number" id="endM" placeholder="End"><input type="number" id="tallyMC" placeholder="MC Tally"></div>
+      <div class="row"><label>Large</label><input type="number" id="beginL" placeholder="Begin"><input type="number" id="endL" placeholder="End"><input type="number" id="tallyLC" placeholder="LC Tally"></div>
+      <div class="row"><label>Small</label><input type="number" id="beginS" placeholder="Begin"><input type="number" id="endS" placeholder="End"><input class="placeholder" disabled></div>
+      <div class="row"><label>Hot Coffee</label><input type="number" id="beginHC" placeholder="Begin"><input type="number" id="endHC" placeholder="End"><input class="placeholder" disabled></div>
+    </div>
+
+    <div class="section">
+      <h3>Expenses &amp; Addons</h3>
+      <div id="expensesContainer">
+        <div class="expense-row">
+          <input type="text" class="exp-name" placeholder="Item name">
+          <input type="number" class="exp-price" placeholder="₱0">
+          <button type="button" class="remove-expense-btn">x</button>
+        </div>
+      </div>
+      <button type="button" class="add-expense-btn" id="addExpenseBtn">+ Add Expense</button>
+      <div class="row">
+        <label>Addons</label>
+        <input type="number" id="addons" placeholder="₱0">
+        <input class="placeholder" disabled>
+        <input class="placeholder" disabled>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button id="computeBtn">Compute</button>
+      <button id="clearBtn" class="secondary">Clear All</button>
+      <button id="historyBtn" class="secondary">Show History</button>
+      <button id="clearHistoryBtn" class="secondary">Delete History</button>
+    </div>
+
+    <div class="section">
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
