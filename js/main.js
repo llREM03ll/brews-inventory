@@ -4,6 +4,29 @@
  */
 
 const SHIFT_KEY = "brewsShiftResult";
+const LOCK_KEY  = "brewsSummaryLocked";
+window.SUMMARY_LOCK_KEY = LOCK_KEY; // shared with clearAll() in ui.js
+
+// The exact fields that are ever auto-filled from a POS shift — locking
+// these (and only these) is what "view only" on the Shift Data section
+// actually means. Kept as one list so the initial fill and any later
+// re-lock (e.g. after leaving and coming back) can't drift apart.
+const POS_SOURCED_FIELD_IDS = [
+  "beginM","endM","tallyMC","beginL","endL","tallyLC",
+  "beginS","endS","beginHC","endHC",
+  "deliveredM","deliveredL","deliveredS","deliveredHC",
+  "damageM","damageL","damageS","damageHC","addons",
+];
+
+function lockPosSourcedFields() {
+  POS_SOURCED_FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+  const note = document.getElementById("cupsLockedNote");
+  if (note) note.style.display = "block";
+  localStorage.setItem(LOCK_KEY, "1");
+}
 
 (function init() {
   const shiftRaw = localStorage.getItem(SHIFT_KEY);
@@ -56,7 +79,6 @@ const SHIFT_KEY = "brewsShiftResult";
           const el = document.getElementById("addons");
           if (el) {
             el.value = s.addonRevenue;
-            el.disabled = true;
             el.style.transition = "background .4s";
             el.style.background = "#fdf0d8";
             setTimeout(() => el.style.background = "", 1000);
@@ -80,17 +102,16 @@ const SHIFT_KEY = "brewsShiftResult";
       // These values all came straight from the POS shift — lock them so
       // the worker can't accidentally edit numbers that are no longer
       // theirs to change, and go straight to the computed Summary below
-      // instead of requiring a manual "Compute" tap.
+      // instead of requiring a manual "Compute" tap. The lock is also
+      // persisted (LOCK_KEY) so it survives leaving and coming back — see
+      // the restore branch below.
       setTimeout(() => {
-        Object.keys(fields).forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.disabled = true;
-        });
-        const note = document.getElementById("cupsLockedNote");
-        if (note) note.style.display = "block";
+        lockPosSourcedFields();
         if (typeof calculate === "function") calculate();
       }, delay + 60);
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load POS shift data into Summary:", e);
+    }
   } else {
     const saved = restoreInputs();
     if (saved?.expenses?.length) {
@@ -100,8 +121,15 @@ const SHIFT_KEY = "brewsShiftResult";
     if (saved?.needs?.length) {
       saved.needs.forEach(n => addNeedRow(n));
     }
-    // Manual/fallback path (no POS shift data waiting): if there's already
-    // some saved draft with real cup numbers, show the Summary for it too.
+    // If this draft was locked from a previous POS shift, re-lock it now —
+    // otherwise leaving the page and coming back (or a reload) would quietly
+    // make POS-sourced numbers editable again while still saying "view only".
+    if (localStorage.getItem(LOCK_KEY) === "1") {
+      lockPosSourcedFields();
+    }
+    // Manual/fallback path (no POS shift data waiting, never locked): if
+    // there's already some saved draft with real cup numbers, show the
+    // Summary for it too.
     const hasDraftCups = ["beginM","beginL","beginHC","beginS"].some(id => {
       const el = document.getElementById(id);
       return el && el.value !== "";
@@ -123,7 +151,13 @@ function showShiftBanner() {
   `;
   banner.textContent = "✓ Shift data auto-filled — here's your Summary.";
   const container = document.querySelector(".container");
-  container.insertBefore(banner, container.querySelector(".section"));
+  // insertBefore's reference node must be a *direct* child of container —
+  // querySelector(".section") can return a nested match (e.g. one now
+  // living inside the collapsible "Shift data from POS" details block),
+  // which throws. Only ever insert before an actual direct child.
+  const anchor = container.querySelector(":scope > .section, :scope > .pos-source-details")
+    || container.firstElementChild;
+  container.insertBefore(banner, anchor);
   requestAnimationFrame(() => requestAnimationFrame(() => {
     banner.style.opacity = "1"; banner.style.transform = "translateY(0)";
   }));

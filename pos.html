@@ -74,8 +74,7 @@
     }
     .pos-header-row1 { display: flex; align-items: center; justify-content: space-between; width: 100%; }
     .pos-header-row2 { display: flex; align-items: center; gap: 6px; width: 100%; }
-    .pos-header-actions { display: flex; align-items: stretch; gap: 6px; width: 100%; margin-top: 6px; justify-content: flex-end; }
-    .pos-header-actions .flavor-settings-btn { flex: 0 1 auto; padding: 8px 14px; }
+    .pos-header-actions { display: flex; align-items: stretch; gap: 6px; width: 100%; margin-top: 6px; justify-content: flex-end; flex-wrap: wrap; }
     .pos-header-left { display: flex; flex-direction: column; }
     .pos-header-brand { font-size: 1rem; font-weight: 800; color: var(--white); letter-spacing: 0.1em; }
     .pos-header-meta  { font-size: 0.68rem; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; margin-top: 1px; display: flex; gap: 6px; }
@@ -698,7 +697,7 @@
       <div style="background:#fdf5e8;border:1.5px solid var(--latte);border-radius:12px;padding:12px 14px;font-size:0.84rem;color:var(--mahogany);margin-bottom:10px;line-height:1.55;">
         ↩ You recently ended a shift — orders are still saved. Want to pick up where you left off?
       </div>
-      <button class="start-btn" onclick="resumeShift()" style="background:linear-gradient(145deg,#a07850,#6b4f36);margin-bottom:10px;">↩ &nbsp;Resume Last Shift</button>
+      <button class="start-btn" onclick="resumeShift()" style="margin-bottom:10px;">↩ &nbsp;Resume Last Shift</button>
     </div>
 
     <div id="posCarryoverWrap" style="display:none;">
@@ -761,12 +760,12 @@
         <span class="header-stat-val" id="shiftTotalDisplay">₱0.00</span>
       </div>
     </div>
-    <!-- Row 2b: Actions -->
+    <!-- Row 2b: Actions — same pill-style buttons as every other page's header -->
     <div class="pos-header-actions">
-      <button class="flavor-settings-btn" onclick="location.href='index.html'" title="Home">🏠 Home</button>
-      <button class="flavor-settings-btn" onclick="goBack()" title="Back">← Back</button>
-      <button class="flavor-settings-btn" onclick="goToSettings()" title="Settings">⚙️ Settings</button>
-      <button class="flavor-settings-btn" onclick="openFlavorSettings()">⚙ Flavors</button>
+      <button class="app-header-btn" onclick="location.href='index.html'" title="Home">🏠 Home</button>
+      <button class="app-header-btn" onclick="goBack()" title="Back">← Back</button>
+      <button class="app-header-btn" onclick="goToSettings()" title="Settings">⚙️ Settings</button>
+      <button class="app-header-btn" onclick="openFlavorSettings()">⚙ Flavors</button>
     </div>
     <!-- Row 3: Single adaptive progress bar (to-quota → bonus mode) -->
     <div class="quota-bar-wrap">

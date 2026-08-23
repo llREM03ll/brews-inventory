@@ -106,12 +106,19 @@
       const { r, g, b } = hexToRgb(rotated[baseKey]);
       root.setProperty("--" + varName.replace("tint","tint-"), `rgba(${r},${g},${b},${alpha})`);
     });
+    // The mobile browser/PWA chrome color (address bar tint) is a separate
+    // <meta> tag, not a CSS variable — keep it in sync too so it doesn't
+    // stay the default brown once a custom accent is picked.
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", rotated.mahogany);
   }
 
   function resetAccent() {
     const root = document.documentElement.style;
     Object.keys(BASE).forEach(k => root.removeProperty("--" + k));
     ["--grad-cta","--grad-dark","--grad-card","--tint-1","--tint-2","--tint-3"].forEach(k => root.removeProperty(k));
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", BASE.mahogany);
   }
 
   // Background photo is applied via an injected <style> tag (works even

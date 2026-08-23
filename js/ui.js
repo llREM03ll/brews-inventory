@@ -401,7 +401,10 @@ function _showSyncToast(msg, color, autoDismiss) {
 
 function clearAll() {
   if (!confirm("Clear all inputs and results?")) return;
-  document.querySelectorAll("input").forEach(i => { if (!i.disabled) i.value = ""; });
+  document.querySelectorAll("input").forEach(i => { i.disabled = false; i.value = ""; });
+  const note = document.getElementById("cupsLockedNote");
+  if (note) note.style.display = "none";
+  if (window.SUMMARY_LOCK_KEY) localStorage.removeItem(window.SUMMARY_LOCK_KEY);
   document.getElementById("results").innerHTML           = "";
   document.getElementById("expensesContainer").innerHTML = "";
   if (document.getElementById("needsContainer")) document.getElementById("needsContainer").innerHTML = "";
