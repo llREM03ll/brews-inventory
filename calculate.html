@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="theme-color" content="#6b4f36" />
+  <title>BREWS.CO – Summary</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="js/theme.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/header.js"></script>
+  <style>
+    .damage-note {
+      font-size: 0.68rem; color: var(--dust); font-weight: 500;
+      margin-left: 6px; font-style: italic; text-transform: none; letter-spacing: 0;
+    }
+    .del-dmg-header {
+      display: grid; grid-template-columns: 96px 1fr 1fr;
+      gap: 8px; margin-bottom: 4px;
+    }
+    .del-dmg-header span {
+      font-size: 0.68rem; font-weight: 700; color: var(--dust);
+      letter-spacing: 0.07em; text-transform: uppercase; text-align: center;
+    }
+    .del-dmg-header span:first-child { text-align: left; }
+    @media (max-width: 600px) {
+      .del-dmg-header { display: none; }
+    }
+  </style>
+</head>
+<body class="has-bottom-nav">
+<script>
+  if ((localStorage.getItem("brewsDeviceRole") || "worker") === "manager") {
+    window.location.replace("index.html");
+  }
+</script>
+  <div class="container">
+    <div id="calcHeaderRoot"></div>
+    <script>
+      document.getElementById("calcHeaderRoot").innerHTML = renderPageHeader({ subtitle: "Summary" });
+    </script>
+
+    <!-- Report/Summary is shown immediately — no separate "Calculate" step.
+         The raw cup/delivery/damage numbers below all come straight from the
+         POS shift, so they're tucked away (read-only) instead of sitting in
+         front of the worker as editable fields. -->
+    <details class="pos-source-details" id="posSourceDetails">
+      <summary>Shift data from POS (view only)</summary>
+      <div class="details-body">
+        <div class="section" style="margin-bottom:14px;">
+          <h3>Input Cups</h3>
+          <p class="pos-locked-note" id="cupsLockedNote" style="display:none;">Filled in automatically from your POS shift — not editable here.</p>
+          <!-- M and L have 3 real inputs: begin, end, tally -->
+          <div class="row"><label>Medium</label><input type="number" id="beginM" placeholder="Begin"><input type="number" id="endM" placeholder="End"><input type="number" id="tallyMC" placeholder="MC Tally"></div>
+          <div class="row"><label>Large</label><input type="number" id="beginL" placeholder="Begin"><input type="number" id="endL" placeholder="End"><input type="number" id="tallyLC" placeholder="LC Tally"></div>
+          <!-- HC and S only have begin + end -->
+          <div class="row-2"><label>Hot Coffee</label><input type="number" id="beginHC" placeholder="Begin"><input type="number" id="endHC" placeholder="End"></div>
+          <div class="row-2"><label>Small</label><input type="number" id="beginS" placeholder="Begin"><input type="number" id="endS" placeholder="End"></div>
+        </div>
+
+        <div class="section" style="margin-bottom:0;">
+          <h3>Delivered &amp; Damage <span class="damage-note">optional — shown in receipt only</span></h3>
+          <div class="del-dmg-header">
+            <span>Cup</span><span>Delivered</span><span>Damage</span>
+          </div>
+          <div class="row-2"><label>Medium</label><input type="number" id="deliveredM" placeholder="0"><input type="number" id="damageM" placeholder="0"></div>
+          <div class="row-2"><label>Large</label><input type="number" id="deliveredL" placeholder="0"><input type="number" id="damageL" placeholder="0"></div>
+          <div class="row-2"><label>Hot Coffee</label><input type="number" id="deliveredHC" placeholder="0"><input type="number" id="damageHC" placeholder="0"></div>
+          <div class="row-2"><label>Small</label><input type="number" id="deliveredS" placeholder="0"><input type="number" id="damageS" placeholder="0"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="section">
+      <h3>Expenses &amp; Addons</h3>
+      <div id="expensesContainer">
+        <div class="expense-row">
+          <input type="text" class="exp-name" placeholder="Item name">
+          <input type="number" class="exp-price" placeholder="₱0">
+          <button type="button" onclick="this.parentElement.remove(); saveInputs(); recalcSummary();">✕</button>
+        </div>
+      </div>
+      <button type="button" class="add-expense-btn" onclick="addExpenseRow()">+ Add Expense</button>
+      <!-- Addons: single input, no dummy blanks -->
+      <div class="row-addon" style="margin-top:12px;">
+        <label>Addons</label>
+        <input type="number" id="addons" placeholder="₱0">
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Needs <span class="damage-note">auto-detected + manual — optionally printed on receipt</span></h3>
+
+      <!-- Auto-detected preview — populated after compute or on load -->
+      <div id="needsAutoPreview" style="margin-bottom:12px;"></div>
+
+      <!-- Free-text other needs -->
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;color:var(--bark);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;">Other Needs</div>
+        <div id="needsContainer"></div>
+        <button type="button" class="add-expense-btn" onclick="addNeedRow()">+ Add Item</button>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button onclick="clearAll()" class="secondary">Clear All</button>
+    </div>
+
+    <div class="section">
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <script>document.write(renderBottomNav("calculate"));</script>
+
+  <script>
+    // Clamp all number inputs to 0+
+    document.addEventListener("input", e => {
+      if (e.target.type === "number") {
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v) && v < 0) e.target.value = 0;
+      }
+    });
+
+    // On reload → go to index (unless a shift is active)
+    const _nav = performance.getEntriesByType('navigation')[0];
+    if (_nav && _nav.type === 'reload' && !localStorage.getItem('brewsShiftActive')) {
+      window.location.replace('index.html');
+    }
+    if (localStorage.getItem("brewsShiftActive")) {
+      document.getElementById("shiftNavLabel").textContent = "↩ Shift";
+    }
+
+    // Note: "Use Yesterday's Ending Cups" only lives in the POS Beginning
+    // screen (pos.html) now — it doesn't belong here, since this page only
+    // ever shows *this* shift's already-computed numbers.
+
+    // Recompute automatically whenever an input changes, instead of making
+    // the worker press a "Compute" button — the Summary should always be
+    // showing the current numbers.
+    let _recalcTimer = null;
+    function recalcSummary() {
+      clearTimeout(_recalcTimer);
+      _recalcTimer = setTimeout(() => {
+        if (typeof calculate === "function") calculate();
+      }, 120);
+    }
+    document.addEventListener("input", e => {
+      if (e.target.closest && (e.target.closest("#posSourceDetails") || e.target.id === "addons" || e.target.closest("#expensesContainer"))) {
+        recalcSummary();
+      }
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" onerror="console.warn('Firebase CDN unavailable')"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" onerror="console.warn('Firebase CDN unavailable')"></script>
+  <script src="js/settings.js"></script>
+  <script>
+    if (typeof getSettings !== "function") {
+      const _D = {
+        prices:{ M:29,L:39,S:25,MC:35,LC:45,HC:45,FTM:29,FTL:39 },
+        addonPrices:{"Pearl":6,"Nata":6,"Coffee Jelly":6,"Oreo":6,"Cream Cheese":10,"Espresso Shot":6},
+        salaryBase:350,salaryBonusThreshold:3000,salaryBonusPerK:50,
+        quotaStart:3000,lowStock:5,
+        flavors:{
+          milktea:["Avocado","Black Forest","Buko Pandan","Cappuccino","Cheese Cake","Choco Kisses","Chocolate","Cookies and Cream","Dark Chocolate","Hokkaido","Mango Cheese Cake","Matcha","Mocha","Nutella","Okinawa","Red Velvet","Salted Caramel","Strawberry","Taro","Vanilla","Winter Melon"],
+          fruittea:["Blue Berry","Blue Lemonade","Four Seasons","Green Apple","Kiwi","Lemon","Lychee","Mango","Passion Fruit","Strawberry"],
+          icedcoffee:["Brewsko Original","Cafe Milano","Caramel Machiato","Chocolate","Dark Chocolate","Matcha","Mocha","Salted Caramel","Spanish Latte","Vanilla"],
+          hotcoffee:["Brewsko Original","Cafe Milano","Carmel Latte","Chocolate","Matcha","Spanish Latte"],
+        }
+      };
+      window.getSettings  = () => JSON.parse(JSON.stringify(_D));
+      window.saveSettings = () => {};
+      window.resetSettings= () => {};
+    }
+  </script>
+  <script>
+    if (typeof window.syncPush      !== "function") window.syncPush      = async () => { throw new Error("Sync unavailable"); };
+  </script>
+  <script src="js/sync.js" onerror="console.warn('sync.js not found')"></script>
+  <script src="js/InventorySystem.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

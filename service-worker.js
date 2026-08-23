@@ -1,29 +1,37 @@
-const CACHE_NAME = "brews-inventory-v2";
+const CACHE_NAME = "brews-inventory-v12";
 const urlsToCache = [
   "./",
   "./index.html",
+  "./calculate.html",
+  "./pos.html",
   "./calendar.html",
   "./manifest.json",
   "./css/styles.css",
+  "./js/theme.js",
+  "./js/nav.js",
+  "./js/header.js",
+  "./js/settings.js",
+  "./js/sync.js",
   "./js/InventorySystem.js",
   "./js/storage.js",
   "./js/history.js",
   "./js/ui.js",
   "./js/main.js",
-  "./Image1.jpg",
   "./icon-192.png",
   "./icon-512.png"
 ];
 
-// Install & cache all files
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(urlsToCache.map(url =>
+        cache.add(url).catch(err => console.warn("SW: failed to cache", url, err))
+      ))
+    )
   );
   self.skipWaiting();
 });
 
-// Remove old caches on activate
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -33,7 +41,6 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
-// Serve from cache, fall back to network
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => response || fetch(event.request))
